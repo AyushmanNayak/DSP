@@ -23,9 +23,27 @@ const EffectsList = ({ selectedEffects, setSelectedEffects }) => {
         Filter
       </label>
       <label>
-        <input type="checkbox" checked={selectedEffects.includes('distortion')} onChange={() => handleEffectChange('distortion')} />
-       Distortion
+        <input type="checkbox" checked={selectedEffects.includes('chorus')} onChange={() => handleEffectChange('chorus')} />
+        Chorus
       </label>
+      <label>
+        <input type="checkbox" checked={selectedEffects.includes('distortion')} onChange={() => handleEffectChange('distortion')} />
+        Distortion
+      </label>
+      <label>
+        <input type="checkbox" checked={selectedEffects.includes('pingPongDelay')} onChange={() => handleEffectChange('pingPongDelay')} />
+        Ping Pong Delay
+      </label>
+      <label>
+        <input type="checkbox" checked={selectedEffects.includes('phaser')} onChange={() => handleEffectChange('phaser')} />
+        Phaser
+      </label>
+
+      <label>
+        <input type="checkbox" checked={selectedEffects.includes('AutoWah')} onChange={() => handleEffectChange('AutoWah')} />
+        AutoWah
+      </label>
+
     </div>
   );
 };
