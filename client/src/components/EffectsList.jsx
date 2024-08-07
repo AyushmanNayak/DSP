@@ -7,43 +7,26 @@ const EffectsList = ({ selectedEffects, setSelectedEffects }) => {
     );
   };
 
+  const effects = [
+    'reverb', 'delay', 'filterLowPass', 'filterHighPass'
+    , 'chorus', 'distortion', 'pingPongDelay', 'phaser', 
+    'autoWah', 'bitCrusher', 'chebyshev', 'convolver', 'wet', 'pitchShift',
+    'tremolo', 'vibrato'
+  ];
+
   return (
     <div>
       <h2>Effects</h2>
-      <label>
-        <input type="checkbox" checked={selectedEffects.includes('reverb')} onChange={() => handleEffectChange('reverb')} />
-        Reverb
-      </label>
-      <label>
-        <input type="checkbox" checked={selectedEffects.includes('delay')} onChange={() => handleEffectChange('delay')} />
-        Delay
-      </label>
-      <label>
-        <input type="checkbox" checked={selectedEffects.includes('filter')} onChange={() => handleEffectChange('filter')} />
-        Filter
-      </label>
-      <label>
-        <input type="checkbox" checked={selectedEffects.includes('chorus')} onChange={() => handleEffectChange('chorus')} />
-        Chorus
-      </label>
-      <label>
-        <input type="checkbox" checked={selectedEffects.includes('distortion')} onChange={() => handleEffectChange('distortion')} />
-        Distortion
-      </label>
-      <label>
-        <input type="checkbox" checked={selectedEffects.includes('pingPongDelay')} onChange={() => handleEffectChange('pingPongDelay')} />
-        Ping Pong Delay
-      </label>
-      <label>
-        <input type="checkbox" checked={selectedEffects.includes('phaser')} onChange={() => handleEffectChange('phaser')} />
-        Phaser
-      </label>
-
-      <label>
-        <input type="checkbox" checked={selectedEffects.includes('AutoWah')} onChange={() => handleEffectChange('AutoWah')} />
-        AutoWah
-      </label>
-
+      {effects.map(effect => (
+        <label key={effect}>
+          <input
+            type="checkbox"
+            checked={selectedEffects.includes(effect)}
+            onChange={() => handleEffectChange(effect)}
+          />
+          {effect.charAt(0).toUpperCase() + effect.slice(1)}
+        </label>
+      ))}
     </div>
   );
 };
