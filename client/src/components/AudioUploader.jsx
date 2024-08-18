@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import * as Tone from 'tone';
+import axios from 'axios'
+
+//FLOW : UPLOAD AUDIO --> CREATE AN ARRAY BUFFER --> CREATE AN AUDIO CONTEXT --> DECODE THE ARRAY BUFFER AND CONVERT INTO AN AUDIO BUFFER --> CONVERT THE NATIVE AUDIO BUFFER INTO TONE.JS AUDIO BUFFER --> TONE AUDIO BUFFER ([0]--[0])
 
 const AudioUploader = ({ setAudioBuffer, selectedEffects }) => {
   const [file, setFile] = useState(null);
@@ -25,6 +28,21 @@ const AudioUploader = ({ setAudioBuffer, selectedEffects }) => {
     }
 
     setError(null);
+
+    //uploading file to s3 :
+    const formData = new FormData();
+    formData.append('audiofile', file);
+    try {
+      const res =  await axios.post(`http://localhost:5000/upload`, formData, {
+        headers : {
+          'Content-Type' : 'multipart/form-data',
+        },
+      });
+      console.log("File uploaded", res.data);
+      
+
+      
+    
     const reader = new FileReader();
     reader.onload = async (e) => {
       try {
@@ -33,13 +51,25 @@ const AudioUploader = ({ setAudioBuffer, selectedEffects }) => {
 
         // Decode the ArrayBuffer
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        //the audio context is the entry point for usinf the webAudio API. can be used to deconde audio, create audio nodes and yeah, ofc, control processing
+
+        //in this step, we convert the arrayBuffer into an audioBuffer
         const decodedAudioBuffer = await audioContext.decodeAudioData(arrayBuffer);
 
+        // An AudioBuffer is a structured representation of audio data that can be processed by the Web Audio API. await is used cuz it is an async operation
+
         // Convert AudioBuffer to Float32Array
-        const channelData = [];
+        const channelData = []; //this is to hold the audio data for the left and right channels
         for (let i = 0; i < decodedAudioBuffer.numberOfChannels; i++) {
           channelData.push(decodedAudioBuffer.getChannelData(i));
         }
+
+
+        //printed channelData for the geeks:
+        // console.log("channelData for both the channels");
+        // for(let  i = 0; i<channelData.length; i++){
+        //   console.log(channelData[i]);
+        // }
 
         // Create a ToneAudioBuffer from the Float32Array
         const toneAudioBuffer = Tone.ToneAudioBuffer.fromArray(channelData);
@@ -134,12 +164,7 @@ const AudioUploader = ({ setAudioBuffer, selectedEffects }) => {
               });
               console.log('Applying convolver effect');
               break;
-            case 'wet':
-              effectNode = new Tone.Wet({
-                wet: 0.5 // Example parameter for wet signal amount
-              });
-              console.log('Applying wet effect');
-              break;
+           
             case 'pitchShift':
               effectNode = new Tone.PitchShift({
                 pitch: 4 // Example parameter for pitch shift amount in semitones
@@ -182,9 +207,15 @@ const AudioUploader = ({ setAudioBuffer, selectedEffects }) => {
         console.error('Error during file processing:', error);
         setError(error);
       }
-    };
-
+    }
     reader.readAsArrayBuffer(file);
+    }
+
+
+    catch(err) {
+      console.log("error occured", error);
+    }
+
   };
 
   const handlePlay = () => {

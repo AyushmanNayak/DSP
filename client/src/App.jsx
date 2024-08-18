@@ -17,8 +17,15 @@ function App() {
       {/* Authentication handling */}
       {/* <SignedIn>
         <UserButton /> */}
-        <AudioUploader setAudioBuffer={setAudioBuffer} setFftData={setFftData} selectedEffects={selectedEffects} />
+        
+        <AudioUploader
+         setAudioBuffer={setAudioBuffer} 
+        // setFftData={setFftData} 
+        selectedEffects={selectedEffects} />
+
         <EffectsList selectedEffects={selectedEffects} setSelectedEffects={setSelectedEffects} />
+
+
         {/* {audioBuffer && <AudioPlayer audioBuffer={audioBuffer} selectedEffects={selectedEffects} />} */}
         {/* {fftData && <FFTGraph fftData={fftData} />} */}
         
