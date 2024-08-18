@@ -7,6 +7,7 @@ const s3 = new S3Client({
         accessKeyId: process.env.S3_ACCESS_KEY_ID,
         secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
     },
+    endpoint: `https://s3.${process.env.S3_REGION}.amazonaws.com`,
 });
 
 const s3_bucket = process.env.S3_BUCKET;

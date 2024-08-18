@@ -78,7 +78,6 @@ app.use(express.json());
           Bucket: s3_bucket,
           Body: file,
           ContentType: 'audio/mpeg',
-          ACL: 'public-read',
       };
 
       try {
@@ -93,13 +92,19 @@ app.use(express.json());
   
   app.post('/upload', upload.single('audiofile'), async (req, res) => {
     try {
+      if (!req.file) {
+        return res.status(400).json({ message: 'No file uploaded' });
+      }
+  
       const filename = generateUniqueFileName(req.file);
       const file = req.file.buffer;
       const link = await uploadAudio(filename, file);
-      res.status(200).json({signed_url : link});
-    }catch(err) {
+      res.status(200).json({ signed_url: link });
+    } catch (err) {
+      console.error('Error during upload:', err);  // Log the error
       res.status(500).json({ message: 'Failed to upload audio file', error: err.message });
     }
   });
+  
 
   app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

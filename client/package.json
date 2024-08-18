@@ -10,16 +10,20 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@breezystack/lamejs": "^1.2.7",
     "@clerk/clerk-react": "^5.2.10",
+    "audiobuffer-to-wav": "^1.0.0",
     "axios": "^1.7.3",
     "chart.js": "^4.4.3",
     "fft-js": "^0.0.12",
+     "lamejs": "https://github.com/zhuker/lamejs.git",
     "react": "^18.3.1",
     "react-chartjs-2": "^5.2.0",
     "react-dom": "^18.3.1",
     "react-dropzone": "^14.2.3",
     "react-router-dom": "^6.25.1",
-    "tone": "^15.0.4"
+    "tone": "^15.0.4",
+    "wavefile": "^11.0.0"
   },
   "devDependencies": {
     "@types/react": "^18.3.3",

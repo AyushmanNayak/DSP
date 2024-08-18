@@ -10,7 +10,7 @@ const EffectsList = ({ selectedEffects, setSelectedEffects }) => {
   const effects = [
     'reverb', 'delay', 'filterLowPass', 'filterHighPass',
     'chorus', 'distortion', 'pingPongDelay', 'phaser',
-    'autoWah', 'bitCrusher', 'chebyshev', 'convolver', 'pitchShift',
+    'autoWah', 'bitCrusher', 'chebyshev', 'pitchShift',
     'tremolo', 'vibrato'
   ];
 
