@@ -168,55 +168,51 @@ const AudioUploader = ({ setAudioBuffer, selectedEffects }) => {
     }
   };
 
-  const audioBufferToWav = (aBuffer) => {
-    let numOfChan = aBuffer.numberOfChannels,
-        btwLength = aBuffer.length * numOfChan * 2 + 44,
-        btwArrBuff = new ArrayBuffer(btwLength),
-        btwView = new DataView(btwArrBuff),
-        btwChnls = [],
-        btwIndex,
-        btwSample,
-        btwOffset = 0,
-        btwPos = 0;
-    setUint32(0x46464952); // "RIFF"
-    setUint32(btwLength - 8); // file length - 8
-    setUint32(0x45564157); // "WAVE"
-    setUint32(0x20746d66); // "fmt " chunk
-    setUint32(16); // length = 16
-    setUint16(1); // PCM (uncompressed)
-    setUint16(numOfChan);
-    setUint32(aBuffer.sampleRate);
-    setUint32(aBuffer.sampleRate * 2 * numOfChan); // avg. bytes/sec
-    setUint16(numOfChan * 2); // block-align
-    setUint16(16); // 16-bit
-    setUint32(0x61746164); // "data" - chunk
-    setUint32(btwLength - btwPos - 4); // chunk length
+  const audioBufferToWav = (audioBuffer) => {
+    const numOfChannels = audioBuffer.numberOfChannels;
+    const length = audioBuffer.length * numOfChannels * 2 + 44;
+    const buffer = new ArrayBuffer(length);
+    const view = new DataView(buffer);
 
-    for (btwIndex = 0; btwIndex < aBuffer.numberOfChannels; btwIndex++)
-        btwChnls.push(aBuffer.getChannelData(btwIndex));
-
-    while (btwPos < btwLength) {
-        for (btwIndex = 0; btwIndex < numOfChan; btwIndex++) {
-            btwSample = Math.max(-1, Math.min(1, btwChnls[btwIndex][btwOffset])); // clamp
-            btwSample = (0.5 + btwSample < 0 ? btwSample * 32768 : btwSample * 32767) | 0; // scale to 16-bit signed int
-            btwView.setInt16(btwPos, btwSample, true); // write 16-bit sample
-            btwPos += 2;
+    function writeString(view, offset, string) {
+        for (let i = 0; i < string.length; i++) {
+            view.setUint8(offset + i, string.charCodeAt(i));
         }
-        btwOffset++; // next source sample
     }
 
-    function setUint16(data) {
-        btwView.setUint16(btwPos, data, true);
-        btwPos += 2;
+    let offset = 0;
+
+    writeString(view, offset, 'RIFF'); offset += 4;
+    view.setUint32(offset, 36 + audioBuffer.length * numOfChannels * 2, true); offset += 4;
+    writeString(view, offset, 'WAVE'); offset += 4;
+    writeString(view, offset, 'fmt '); offset += 4;
+    view.setUint32(offset, 16, true); offset += 4;
+    view.setUint16(offset, 1, true); offset += 2;
+    view.setUint16(offset, numOfChannels, true); offset += 2;
+    view.setUint32(offset, audioBuffer.sampleRate, true); offset += 4;
+    view.setUint32(offset, audioBuffer.sampleRate * 4, true); offset += 4;
+    view.setUint16(offset, numOfChannels * 2, true); offset += 2;
+    view.setUint16(offset, 16, true); offset += 2;
+    writeString(view, offset, 'data'); offset += 4;
+    view.setUint32(offset, audioBuffer.length * numOfChannels * 2, true); offset += 4;
+
+    const channels = [];
+    for (let i = 0; i < numOfChannels; i++) {
+        channels.push(audioBuffer.getChannelData(i));
     }
 
-    function setUint32(data) {
-        btwView.setUint32(btwPos, data, true);
-        btwPos += 4;
+    let pos = 44;
+    for (let i = 0; i < audioBuffer.length; i++) {
+        for (let channel = 0; channel < numOfChannels; channel++) {
+            const sample = Math.max(-1, Math.min(1, channels[channel][i]));
+            view.setInt16(pos, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+            pos += 2;
+        }
     }
 
-    return btwArrBuff;
-  };
+    return new Blob([buffer], { type: 'audio/wav' });
+};
+
   const wavToMp3 = (channels, sampleRate, samples) => {
     const buffer = [];
     const mp3enc = new lamejs.Mp3Encoder(channels, sampleRate, 256); // Ensure sampleRate is correct
