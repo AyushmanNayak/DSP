@@ -16,7 +16,7 @@ const { connectDB } = require('./config/db');
 connectDB();
 
 const corsOptions = {
-  origin: '*',
+  origin: 'https://dsp-front.vercel.app',
   credentials: true,
   optionsSuccessStatus: 200,
 };
@@ -79,6 +79,7 @@ app.use(express.json());
           Body: file,
           ContentType: 'audio/mpeg',
       };
+      //sleep token
 
       try {
           const command = new PutObjectCommand(params);

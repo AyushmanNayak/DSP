@@ -8,6 +8,8 @@ const AudioUploader = ({ setAudioBuffer, selectedEffects }) => {
   const [audioBuffer, setAudioBufferState] = useState(null);
   const [error, setError] = useState(null);
   const [player, setPlayer] = useState(null);
+  
+  
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -31,7 +33,7 @@ const AudioUploader = ({ setAudioBuffer, selectedEffects }) => {
     const formData = new FormData();
     formData.append('audiofile', file);
     try {
-      const res = await axios.post(`http://localhost:5000/upload`, formData, {
+      const res = await axios.post(`https://dsp-back.vercel.app/upload`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -149,7 +151,7 @@ const AudioUploader = ({ setAudioBuffer, selectedEffects }) => {
 
           const mp3FormData = new FormData();
           mp3FormData.append('audiofile', mp3Blob, 'processed-audio.mp3');
-          await axios.post(`http://localhost:5000/upload`, mp3FormData, {
+          await axios.post(`https://dsp-back.vercel.app/upload`, mp3FormData, {
             headers: {
               'Content-Type': 'multipart/form-data',
             },
