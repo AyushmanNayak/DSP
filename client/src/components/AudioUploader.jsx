@@ -8,7 +8,8 @@ const AudioUploader = ({ setAudioBuffer, selectedEffects }) => {
   const [error, setError] = useState(null);
   const [player, setPlayer] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  
+  const [recorder, setRecorder] = useState(null);
+
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile.type === 'audio/mpeg') {
@@ -44,7 +45,7 @@ const AudioUploader = ({ setAudioBuffer, selectedEffects }) => {
         try {
           const arrayBuffer = e.target.result;
           const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-          const decodedAudioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+          const decodedAudioBuffer = await audioContext.decodeAudioData(arrayBuffer); 
 
           const channelData = [];
           for (let i = 0; i < decodedAudioBuffer.numberOfChannels; i++) {
@@ -112,95 +113,41 @@ const AudioUploader = ({ setAudioBuffer, selectedEffects }) => {
               effectChain = effectNode;
             }
           });
-  
-          effectChain.toDestination();
-  
-          setAudioBufferState(toneAudioBuffer);
-          setAudioBuffer(toneAudioBuffer);
-          setPlayer(player);
-  
-          const wavData = audioBufferToWav(decodedAudioBuffer);
-          const wavBlob = new Blob([wavData], { type: 'audio/wav' });
-  
-          const wavFormData = new FormData();
-          wavFormData.append('audiofile', wavBlob, 'processed-audio.wav');
-  
-          await axios.post(`http://localhost:5000/upload`, wavFormData, {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-            },
-          });
-  
-          console.log("Processed WAV audio uploaded");
-  
+
+          const recorder = new Tone.Recorder();
+          effectChain.connect(recorder);
+          setRecorder(recorder);
+          
+          // Start recording and playing the audio
+          await recorder.start();
+          player.start();
+          
+          // Stop recording after a delay (duration of the audio)
+          setTimeout(async () => {
+            const recordedAudio = await recorder.stop();
+
+            const blob = new Blob([recordedAudio], { type: 'audio/wav' });
+            const formData = new FormData();
+            formData.append('audiofile', blob, 'processed-audio.wav');
+
+            // Upload the recorded audio
+            await axios.post('http://localhost:5000/upload', formData, {
+              headers: { 'Content-Type': 'multipart/form-data' },
+            });
+
+            console.log("Processed audio uploaded");
+          }, toneAudioBuffer.duration * 1000);
+
         } catch (error) {
           console.error('Error during file processing:', error);
           setError(error);
         }
       };
       reader.readAsArrayBuffer(file);
+
     } catch (err) {
       console.log("Error occurred", err);
       setError(err);
-    }
-  };
-
-  const audioBufferToWav = (audioBuffer) => {
-    const numOfChannels = audioBuffer.numberOfChannels;
-    const length = audioBuffer.length * numOfChannels * 2 + 44;
-    const buffer = new ArrayBuffer(length);
-    const view = new DataView(buffer);
-
-    function writeString(view, offset, string) {
-        for (let i = 0; i < string.length; i++) {
-            view.setUint8(offset + i, string.charCodeAt(i));
-        }
-    }
-
-    let offset = 0;
-
-    writeString(view, offset, 'RIFF'); offset += 4;
-    view.setUint32(offset, 36 + audioBuffer.length * numOfChannels * 2, true); offset += 4;
-    writeString(view, offset, 'WAVE'); offset += 4;
-    writeString(view, offset, 'fmt '); offset += 4;
-    view.setUint32(offset, 16, true); offset += 4;
-    view.setUint16(offset, 1, true); offset += 2;
-    view.setUint16(offset, numOfChannels, true); offset += 2;
-    view.setUint32(offset, audioBuffer.sampleRate, true); offset += 4;
-    view.setUint32(offset, audioBuffer.sampleRate * 4, true); offset += 4;
-    view.setUint16(offset, numOfChannels * 2, true); offset += 2;
-    view.setUint16(offset, 16, true); offset += 2;
-    writeString(view, offset, 'data'); offset += 4;
-    view.setUint32(offset, audioBuffer.length * numOfChannels * 2, true); offset += 4;
-
-    const channels = [];
-    for (let i = 0; i < numOfChannels; i++) {
-        channels.push(audioBuffer.getChannelData(i));
-    }
-
-    let pos = 44;
-    for (let i = 0; i < audioBuffer.length; i++) {
-        for (let channel = 0; channel < numOfChannels; channel++) {
-            const sample = Math.max(-1, Math.min(1, channels[channel][i]));
-            view.setInt16(pos, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
-            pos += 2;
-        }
-    }
-
-    return new Uint8Array(buffer);  // Return a Uint8Array instead of ArrayBuffer
-  };
-
-  const handlePlay = () => {
-    if (player) {
-      player.start();
-      setIsPlaying(true);
-    }
-  };
-
-  const handleStop = () => {
-    if (player) {
-      player.stop();
-      setIsPlaying(false);
     }
   };
 
@@ -209,10 +156,6 @@ const AudioUploader = ({ setAudioBuffer, selectedEffects }) => {
       <input type="file" accept=".mp3" onChange={handleFileChange} />
       <button onClick={handleUpload}>Upload</button>
       {error && <div>Error: {error.message}</div>}
-      <div>
-        <button onClick={handlePlay} disabled={isPlaying}>Play</button>
-        <button onClick={handleStop} disabled={!isPlaying}>Stop</button>
-      </div>
     </div>
   );
 };
