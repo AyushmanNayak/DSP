@@ -12,7 +12,7 @@ function App() {
 
   return (
     <div className="App">
-      <h1>Audio DSP Playground</h1>
+      <h1>Soundlab</h1>
       
       {/* Authentication handling */}
       {/* <SignedIn>
