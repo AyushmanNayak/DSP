@@ -33,7 +33,7 @@ const AudioUploader = ({ setAudioBuffer, selectedEffects }) => {
     formData.append('audiofile', file);
 
     try {
-      const res = await axios.post(`https://dsp-back.vercel.app/upload`, formData, {
+      const res = await axios.post(`http://localhost:5000/upload`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -66,40 +66,81 @@ const AudioUploader = ({ setAudioBuffer, selectedEffects }) => {
               case 'delay':
                 effectNode = new Tone.FeedbackDelay("4n", 0.5);
                 break;
-              // [Other cases omitted for brevity]
+              case 'filterLowPass':
+                effectNode = new Tone.Filter({ frequency: 1000, type: 'lowpass' });
+                break;
+              case 'filterHighPass':
+                effectNode = new Tone.Filter({ frequency: 1000, type: 'highpass' });
+                break;
+              case 'chorus':
+                effectNode = new Tone.Chorus({ rate: 1.5, depth: 0.7 });
+                break;
+              case 'distortion':
+                effectNode = new Tone.Distortion({ distortion: 0.5 });
+                break;
+              case 'phaser':
+                effectNode = new Tone.Phaser({ frequency: 0.5, octaves: 2, stages: 8 });
+                break;
+              case 'pingPongDelay':
+                effectNode = new Tone.PingPongDelay({ delayTime: "4n", feedback: 0.5 });
+                break;
+              case 'autoWah':
+                effectNode = new Tone.AutoWah({ baseFrequency: 400, octaves: 6, Q: 1, gain: 1 });
+                break;
+              case 'bitCrusher':
+                effectNode = new Tone.BitCrusher({ bits: 4 });
+                break;
+              case 'chebyshev':
+                effectNode = new Tone.Chebyshev({ order: 50 });
+                break;
+              case 'convolver':
+                effectNode = new Tone.Convolver();
+                break;
+              case 'pitchShift':
+                effectNode = new Tone.PitchShift({ pitch: 4 });
+                break;
+              case 'tremolo':
+                effectNode = new Tone.Tremolo({ frequency: 4, depth: 0.5 }).start();
+                break;
+              case 'vibrato':
+                effectNode = new Tone.Vibrato({ frequency: 5, depth: 0.5 });
+                break;
               default:
                 return;
             }
 
-            if (effectNode) {
-              effectChain.chain(effectNode);
+             // Chain the effect to the current node and update the current node
+             if (effectNode) {
+              effectChain.connect(effectNode);
               effectChain = effectNode;
             }
           });
 
+          // Connect the last effect in the chain to the destination
+          effectChain.toDestination();
+
+          // Setup recorder
           const recorder = new Tone.Recorder();
           effectChain.connect(recorder);
-          setRecorder(recorder);
-          
+
           // Start recording and playing the audio
           await recorder.start();
           player.start();
-          
-          // Stop recording after a delay (duration of the audio)
+
+          // Stop recording after the duration of the audio
           setTimeout(async () => {
             const recordedAudio = await recorder.stop();
-
             const blob = new Blob([recordedAudio], { type: 'audio/wav' });
             const formData = new FormData();
             formData.append('audiofile', blob, 'processed-audio.wav');
 
             // Upload the recorded audio and get the URL back
-            const uploadRes = await axios.post(`https://dsp-back.vercel.app/upload`, formData, {
+            const uploadRes = await axios.post('http://localhost:5000/upload', formData, {
               headers: { 'Content-Type': 'multipart/form-data' },
             });
 
             console.log("Processed audio uploaded");
-            setProcessedAudioUrl(uploadRes.data.signed_url); // bcuz the URL is returned in the response
+            setProcessedAudioUrl(uploadRes.data.signed_url);
 
           }, toneAudioBuffer.duration * 1000);
 
