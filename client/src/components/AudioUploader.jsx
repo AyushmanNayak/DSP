@@ -33,7 +33,7 @@ const AudioUploader = ({ setAudioBuffer, selectedEffects }) => {
     formData.append('audiofile', file);
 
     try {
-      const res = await axios.post(`http://localhost:5000/upload`, formData, {
+      const res = await axios.post(`https://dsp-back.vercel.app/upload`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -94,12 +94,12 @@ const AudioUploader = ({ setAudioBuffer, selectedEffects }) => {
             formData.append('audiofile', blob, 'processed-audio.wav');
 
             // Upload the recorded audio and get the URL back
-            const uploadRes = await axios.post('http://localhost:5000/upload', formData, {
+            const uploadRes = await axios.post(`https://dsp-back.vercel.app/upload`, formData, {
               headers: { 'Content-Type': 'multipart/form-data' },
             });
 
             console.log("Processed audio uploaded");
-            setProcessedAudioUrl(uploadRes.data.signed_url); // Assuming the URL is returned in the response
+            setProcessedAudioUrl(uploadRes.data.signed_url); // bcuz the URL is returned in the response
 
           }, toneAudioBuffer.duration * 1000);
 

@@ -16,7 +16,7 @@ const { connectDB } = require('./config/db');
 connectDB();
 
 const corsOptions = {
-  origin: 'http://localhost:5173',
+  origin: 'https://dsp-front.vercel.app',
   credentials: true,
   optionsSuccessStatus: 200,
 };
