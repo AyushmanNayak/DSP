@@ -9,6 +9,11 @@ const AudioUploader = ({ setAudioBuffer, selectedEffects }) => {
   const [player, setPlayer] = useState(null);
   const [recorder, setRecorder] = useState(null);
   const [processedAudioUrl, setProcessedAudioUrl] = useState(null);
+  
+  // State for EQ3 values (low, mid, high)
+  const [low, setLow] = useState(0);
+  const [mid, setMid] = useState(0);
+  const [high, setHigh] = useState(0);
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -109,19 +114,19 @@ const AudioUploader = ({ setAudioBuffer, selectedEffects }) => {
                 return;
             }
 
-             // Chain the effect to the current node and update the current node
-             if (effectNode) {
+            if (effectNode) {
               effectChain.connect(effectNode);
               effectChain = effectNode;
             }
           });
 
-          // Connect the last effect in the chain to the destination
-          effectChain.toDestination();
+          // Create the EQ3 effect for low, mid, and high adjustments
+          const eq3 = new Tone.EQ3(low, mid, high).toDestination();
+          effectChain.connect(eq3);
 
           // Setup recorder
           const recorder = new Tone.Recorder();
-          effectChain.connect(recorder);
+          eq3.connect(recorder);
 
           // Start recording and playing the audio
           await recorder.start();
@@ -131,11 +136,12 @@ const AudioUploader = ({ setAudioBuffer, selectedEffects }) => {
           setTimeout(async () => {
             const recordedAudio = await recorder.stop();
             const blob = new Blob([recordedAudio], { type: 'audio/wav' });
+
             const formData = new FormData();
             formData.append('audiofile', blob, 'processed-audio.wav');
 
             // Upload the recorded audio and get the URL back
-            const uploadRes = await axios.post('http://localhost:5000/upload', formData, {
+            const uploadRes = await axios.post(`http://localhost:5000/upload`, formData, {
               headers: { 'Content-Type': 'multipart/form-data' },
             });
 
@@ -162,7 +168,35 @@ const AudioUploader = ({ setAudioBuffer, selectedEffects }) => {
       <input type="file" accept=".mp3" onChange={handleFileChange} />
       <button onClick={handleUpload}>Upload</button>
       {error && <div>Error: {error.message}</div>}
-      
+
+      {/* Sliders for adjusting low, mid, and high */}
+      <div>
+        <label>Low</label>
+        <input
+          type="range"
+          min="-40"
+          max="40"
+          value={low}
+          onChange={(e) => setLow(parseFloat(e.target.value))}
+        />
+        <label>Mid</label>
+        <input
+          type="range"
+          min="-40"
+          max="40"
+          value={mid}
+          onChange={(e) => setMid(parseFloat(e.target.value))}
+        />
+        <label>High</label>
+        <input
+          type="range"
+          min="-40"
+          max="40"
+          value={high}
+          onChange={(e) => setHigh(parseFloat(e.target.value))}
+        />
+      </div>
+
       {processedAudioUrl && (
         <div>
           <a href={processedAudioUrl} download="processed-audio.wav">
